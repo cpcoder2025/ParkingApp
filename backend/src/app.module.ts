@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './auth/auth.module';
 // import { ParkingModule } from './parking/parking.module';
 // import { BookingsModule } from './bookings/bookings.module';
 // import { PaymentsModule } from './payments/payments.module';
@@ -32,7 +32,7 @@ import {
       }),
     }),
 
-    // AuthModule,
+    AuthModule,
     // ParkingModule,
     // BookingsModule,
     // PaymentsModule,

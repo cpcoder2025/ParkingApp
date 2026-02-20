@@ -1,24 +1,14 @@
-/*
 import {
   Injectable,
-  ConflictException,
   UnauthorizedException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole } from '../entities';
-import {
-  RegisterDto,
-  LoginDto,
-  ForgotPasswordDto,
-  ResetPasswordDto,
-  RefreshTokenDto,
-  CreateAdminDto,
-} from './dto';
+import { User } from '../entities';
+import { LoginDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +18,52 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
+  async login(dto: LoginDto) {
+    const user = await this.usersRepo.findOne({
+      where: { email: dto.email },
+    });
+    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    const valid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('Invalid credentials');
+
+    const tokens = await this.generateTokens(user);
+    await this.updateRefreshToken(user.id, tokens.refreshToken);
+
+    return {
+      user: this.sanitizeUser(user),
+      ...tokens,
+    };
+  }
+
+  private async generateTokens(user: User) {
+    const payload = { sub: user.id, email: user.email, role: user.role };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
+        expiresIn: '1h' as const,
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'fallback-refresh-secret',
+        expiresIn: '7d' as const,
+      }),
+    ]);
+
+    return { accessToken, refreshToken };
+  }
+
+  private async updateRefreshToken(userId: string, refreshToken: string) {
+    const hash = await bcrypt.hash(refreshToken, 12);
+    await this.usersRepo.update(userId, { refreshToken: hash });
+  }
+
+  private sanitizeUser(user: User) {
+    const { passwordHash, refreshToken, ...result } = user;
+    return result;
+  }
+
+  /*
   async register(dto: RegisterDto) {
     const existing = await this.usersRepo.findOne({
       where: { email: dto.email },
@@ -72,24 +108,6 @@ export class AuthService {
 
     const saved = await this.usersRepo.save(user);
     return { user: this.sanitizeUser(saved) };
-  }
-
-  async login(dto: LoginDto) {
-    const user = await this.usersRepo.findOne({
-      where: { email: dto.email },
-    });
-    if (!user) throw new UnauthorizedException('Invalid credentials');
-
-    const valid = await bcrypt.compare(dto.password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
-
-    const tokens = await this.generateTokens(user);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-    return {
-      user: this.sanitizeUser(user),
-      ...tokens,
-    };
   }
 
   async refreshTokens(dto: RefreshTokenDto) {
@@ -140,7 +158,6 @@ export class AuthService {
       },
     );
 
-    // TODO: integrate email service to send resetToken
     return { message: 'If that email exists, a reset link was sent', resetToken };
   }
 
@@ -164,32 +181,5 @@ export class AuthService {
       throw new BadRequestException('Invalid or expired token');
     }
   }
-
-  private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
-
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET') || 'fallback-secret',
-        expiresIn: '1h' as const,
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'fallback-refresh-secret',
-        expiresIn: '7d' as const,
-      }),
-    ]);
-
-    return { accessToken, refreshToken };
-  }
-
-  private async updateRefreshToken(userId: string, refreshToken: string) {
-    const hash = await bcrypt.hash(refreshToken, 12);
-    await this.usersRepo.update(userId, { refreshToken: hash });
-  }
-
-  private sanitizeUser(user: User) {
-    const { passwordHash, refreshToken, ...result } = user;
-    return result;
-  }
+  */
 }
-*/

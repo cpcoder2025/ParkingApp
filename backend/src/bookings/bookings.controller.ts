@@ -1,4 +1,3 @@
-/*
 import {
   Controller,
   Get,
@@ -129,4 +128,3 @@ export class BookingsController {
     return this.bookingsService.extend(id, dto, userId);
   }
 }
-*/

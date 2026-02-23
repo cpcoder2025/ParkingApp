@@ -1,4 +1,3 @@
-/*
 import {
   Injectable,
   NotFoundException,
@@ -303,4 +302,3 @@ export class BookingsService {
     return overlapping < parking.totalCapacity;
   }
 }
-*/

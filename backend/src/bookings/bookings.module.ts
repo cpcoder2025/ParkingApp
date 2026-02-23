@@ -1,4 +1,3 @@
-/*
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Booking, ParkingLocation, Occupancy } from '../entities';
@@ -12,4 +11,3 @@ import { BookingsController } from './bookings.controller';
   exports: [BookingsService],
 })
 export class BookingsModule {}
-*/

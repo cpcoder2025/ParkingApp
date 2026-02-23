@@ -2,26 +2,31 @@ import {
   Controller,
   Post,
   Body,
+  UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto';
+import {
+  RegisterDto,
+  LoginDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  RefreshTokenDto,
+  CreateAdminDto,
+} from './dto';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { UserRole } from '../entities';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'User login with credentials' })
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
-  }
-
-  /*
   @Post('register')
   @ApiOperation({ summary: 'Register new user account (customer/owner only)' })
   register(@Body() dto: RegisterDto) {
@@ -35,6 +40,13 @@ export class AuthController {
   @ApiOperation({ summary: 'Create user with any role (admin only)' })
   createUser(@Body() dto: CreateAdminDto) {
     return this.authService.createUserAsAdmin(dto);
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'User login with credentials' })
+  login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
   @Post('refresh')
@@ -66,5 +78,4 @@ export class AuthController {
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
   }
-  */
 }

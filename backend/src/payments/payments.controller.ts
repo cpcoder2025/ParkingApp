@@ -1,4 +1,3 @@
-/*
 import {
   Controller,
   Get,
@@ -101,4 +100,3 @@ export class PaymentsController {
     return this.paymentsService.processRefund(id);
   }
 }
-*/

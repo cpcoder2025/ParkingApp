@@ -1,4 +1,3 @@
-/*
 import {
   Injectable,
   NotFoundException,
@@ -217,4 +216,3 @@ export class PaymentsService {
     };
   }
 }
-*/

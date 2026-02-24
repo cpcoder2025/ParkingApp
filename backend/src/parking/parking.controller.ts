@@ -1,4 +1,3 @@
-/*
 import {
   Controller,
   Get,
@@ -147,4 +146,3 @@ export class ParkingController {
     return this.parkingService.uploadImages(id, imageUrls);
   }
 }
-*/

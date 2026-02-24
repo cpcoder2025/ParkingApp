@@ -17,13 +17,21 @@ export class CreateParkingDto {
   @IsString()
   address: string;
 
-  @ApiProperty({ example: 37.7749 })
+  @ApiPropertyOptional({
+    example: 37.7749,
+    description: 'Auto-resolved from address if omitted',
+  })
+  @IsOptional()
   @IsNumber()
-  latitude: number;
+  latitude?: number;
 
-  @ApiProperty({ example: -122.4194 })
+  @ApiPropertyOptional({
+    example: -122.4194,
+    description: 'Auto-resolved from address if omitted',
+  })
+  @IsOptional()
   @IsNumber()
-  longitude: number;
+  longitude?: number;
 
   @ApiProperty({ example: 100 })
   @IsNumber()

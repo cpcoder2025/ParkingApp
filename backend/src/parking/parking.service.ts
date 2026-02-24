@@ -1,8 +1,8 @@
-/*
 import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +14,7 @@ import {
   UpdateOccupancyDto,
   UpdatePricingDto,
 } from './dto';
+import { GeocodingService } from '../geocoding/geocoding.service';
 
 @Injectable()
 export class ParkingService {
@@ -22,6 +23,7 @@ export class ParkingService {
     private parkingRepo: Repository<ParkingLocation>,
     @InjectRepository(Occupancy)
     private occupancyRepo: Repository<Occupancy>,
+    private geocodingService: GeocodingService,
   ) {}
 
   async findAll(page = 1, limit = 20) {
@@ -36,6 +38,12 @@ export class ParkingService {
   }
 
   async create(dto: CreateParkingDto, ownerId: string) {
+    if (dto.latitude == null || dto.longitude == null) {
+      const geo = await this.geocodingService.geocode(dto.address);
+      dto.latitude = geo.latitude;
+      dto.longitude = geo.longitude;
+    }
+
     const parking = this.parkingRepo.create({ ...dto, ownerId });
     const saved = await this.parkingRepo.save(parking);
 
@@ -90,6 +98,20 @@ export class ParkingService {
   }
 
   async findNearby(dto: NearbySearchDto) {
+    let { latitude, longitude } = dto;
+
+    if ((latitude == null || longitude == null) && dto.address) {
+      const geo = await this.geocodingService.geocode(dto.address);
+      latitude = geo.latitude;
+      longitude = geo.longitude;
+    }
+
+    if (latitude == null || longitude == null) {
+      throw new BadRequestException(
+        'Provide either latitude/longitude or an address',
+      );
+    }
+
     const radiusInDegrees = (dto.radius || 1000) / 111320;
 
     const parkings = await this.parkingRepo
@@ -97,24 +119,26 @@ export class ParkingService {
       .leftJoinAndSelect('p.occupancy', 'o')
       .where('p.is_active = :active', { active: true })
       .andWhere('p.latitude BETWEEN :minLat AND :maxLat', {
-        minLat: dto.latitude - radiusInDegrees,
-        maxLat: dto.latitude + radiusInDegrees,
+        minLat: latitude - radiusInDegrees,
+        maxLat: latitude + radiusInDegrees,
       })
       .andWhere('p.longitude BETWEEN :minLng AND :maxLng', {
-        minLng: dto.longitude - radiusInDegrees,
-        maxLng: dto.longitude + radiusInDegrees,
+        minLng: longitude - radiusInDegrees,
+        maxLng: longitude + radiusInDegrees,
       })
       .getMany();
 
-    return parkings.map((p) => ({
-      ...p,
-      distance: this.haversineDistance(
-        dto.latitude,
-        dto.longitude,
-        Number(p.latitude),
-        Number(p.longitude),
-      ),
-    })).sort((a, b) => a.distance - b.distance);
+    return parkings
+      .map((p) => ({
+        ...p,
+        distance: this.haversineDistance(
+          latitude!,
+          longitude!,
+          Number(p.latitude),
+          Number(p.longitude),
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance);
   }
 
   async getOccupancy(parkingId: string) {
@@ -214,4 +238,3 @@ export class ParkingService {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 }
-*/

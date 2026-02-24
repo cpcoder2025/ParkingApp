@@ -25,6 +25,10 @@ async function bootstrap() {
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('Authentication', 'User registration, login, and token management')
+    .addTag('Parking', 'Parking location CRUD, nearby search, occupancy, pricing')
+    .addTag('Bookings', 'Reservation lifecycle, QR codes, availability')
+    .addTag('Payments', 'Stripe payments, invoices, refunds')
+    .addTag('Geocoding', 'Forward & reverse geocoding (address ↔ coordinates)')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

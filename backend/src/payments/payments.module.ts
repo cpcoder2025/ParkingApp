@@ -1,4 +1,3 @@
-/*
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Payment, Booking } from '../entities';
@@ -12,4 +11,3 @@ import { PaymentsController } from './payments.controller';
   exports: [PaymentsService],
 })
 export class PaymentsModule {}
-*/
